@@ -7,7 +7,7 @@ let counter = 0;
 export function createToastId(id?: ToastId): ToastId {
   if (id !== undefined) return id;
   counter += 1;
-  return `sonner-${Date.now().toString(36)}-${counter.toString(36)}`;
+  return `vt-${Date.now().toString(36)}-${counter.toString(36)}`;
 }
 
 export function clamp(value: number, min: number, max: number): number {

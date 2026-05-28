@@ -1,9 +1,10 @@
-import './styles/sonner.css';
+import './styles/vanilla-toast.css';
 import { toast } from './toast';
 
 if (typeof window !== 'undefined') {
+  window.vanillaToast = toast;
   window.toast = toast;
-  window.VanillaSonner = { toast };
+  window.VanillaToast = { toast };
 }
 
 export { toast };

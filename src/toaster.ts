@@ -6,6 +6,7 @@ import type {
   InternalToast,
   ToastId,
   ToastOptions,
+  ToastPosition,
   ToastPromiseMessages,
   ToastType,
   ToastUpdateOptions,
@@ -29,25 +30,28 @@ const icons: Partial<Record<ToastType, string>> & { close: string } = {
 export class Toaster {
   private options: ToasterOptions = { ...defaultOptions };
   private queue = new ToastQueue();
-  private container?: HTMLElement;
-  private expanded = false;
+  private containers = new Map<ToastPosition, HTMLElement>();
+  private expandedPositions = new Set<ToastPosition>();
+  private pendingLayouts = new Set<ToastPosition>();
+  private containerCleanups = new Map<ToastPosition, () => void>();
+  private layoutFrame?: number;
   private keyboardCleanup?: () => void;
 
   configure(options: Partial<ToasterOptions>): void {
     this.options = mergeDefined(this.options, options as Partial<ToasterOptions>);
-    if (this.container) {
-      this.container.dataset.position = this.options.position;
-      this.container.dataset.animation = this.options.animation;
-      applyTheme(this.container, this.options.theme);
-      this.layout();
-    }
+    this.containers.forEach((container) => {
+      container.dataset.animation = this.options.animation;
+      applyTheme(container, this.options.theme);
+    });
+    this.queue.active().forEach((toast) => this.scheduleLayout(toast.position));
   }
 
   show(message: string, options: ToastOptions = {}): ToastId {
     if (!isBrowser) return options.id ?? '';
-    this.ensureContainer();
 
     const resolved = this.resolveOptions(message, options);
+    const position = resolved.position!;
+    const container = this.ensureContainer(position);
     const existing = this.queue.get(resolved.id!);
     if (existing) {
       this.update(existing.id, resolved);
@@ -55,7 +59,7 @@ export class Toaster {
     }
 
     const element = this.createToastElement(resolved);
-    this.container!.appendChild(element);
+    container.appendChild(element);
 
     const height = element.getBoundingClientRect().height;
     const toast: InternalToast = {
@@ -63,6 +67,7 @@ export class Toaster {
       title: resolved.title!,
       description: resolved.description,
       type: resolved.type ?? 'default',
+      position,
       dismissible: resolved.dismissible ?? true,
       duration: resolved.duration!,
       remaining: resolved.duration!,
@@ -79,7 +84,7 @@ export class Toaster {
     this.bindToastEvents(toast);
     this.queue.add(toast);
     mountToast(toast);
-    this.layout();
+    this.scheduleLayout(position);
     this.startTimer(toast);
 
     return toast.id;
@@ -104,6 +109,8 @@ export class Toaster {
     toast.title = nextOptions.title!;
     toast.description = nextOptions.description;
     toast.type = nextOptions.type ?? 'default';
+    const previousPosition = toast.position;
+    toast.position = nextOptions.position!;
     toast.dismissible = nextOptions.dismissible ?? true;
     toast.duration = nextOptions.duration!;
     toast.remaining = nextOptions.duration!;
@@ -111,21 +118,30 @@ export class Toaster {
     const nextElement = this.createToastElement(nextOptions);
     toast.element.replaceWith(nextElement);
     toast.element = nextElement;
+    if (previousPosition !== toast.position) {
+      this.ensureContainer(toast.position).appendChild(toast.element);
+    }
     toast.cleanup.forEach((cleanup) => cleanup());
     toast.cleanup = [];
     this.bindToastEvents(toast);
     toast.height = toast.element.getBoundingClientRect().height;
     toast.element.dataset.mounted = 'true';
     this.startTimer(toast);
-    this.layout();
+    this.scheduleLayout(previousPosition);
+    this.scheduleLayout(toast.position);
+    this.cleanupContainer(previousPosition);
   }
 
   dismiss(id?: ToastId): void {
     if (id === undefined) {
-      this.queue.active().forEach((toast) => this.removeToast(toast.id));
+      this.dismissAll();
       return;
     }
     this.removeToast(id);
+  }
+
+  dismissAll(): void {
+    this.queue.active().forEach((toast) => this.removeToast(toast.id));
   }
 
   promise<T>(promise: Promise<T> | (() => Promise<T>), messages: ToastPromiseMessages<T>, options: ToastOptions = {}): Promise<T> {
@@ -172,34 +188,47 @@ export class Toaster {
     return typeof message === 'string' ? { ...fallback, title: message } : { ...fallback, ...message };
   }
 
-  private ensureContainer(): void {
-    if (this.container) return;
+  private ensureContainer(position: ToastPosition): HTMLElement {
+    const cached = this.containers.get(position);
+    if (cached?.isConnected) return cached;
 
-    const container = document.createElement('div');
-    container.dataset.sonnerToaster = 'true';
-    container.dataset.position = this.options.position;
+    const selector = `[data-vt-toaster][data-position="${position}"], .vt-container.${position}`;
+    const existing = document.querySelector<HTMLElement>(selector);
+    const container = existing ?? document.createElement('div');
+    container.classList.add('vt-container', position);
+    container.dataset.vtToaster = 'true';
+    container.dataset.position = position;
     container.dataset.animation = this.options.animation;
+    if (!existing) container.dataset.vtCreated = 'true';
     container.setAttribute('aria-live', 'polite');
     container.setAttribute('aria-atomic', 'false');
     applyTheme(container, this.options.theme);
 
-    container.addEventListener('mouseenter', () => {
+    const onMouseEnter = () => {
       if (!this.options.expandOnHover) return;
-      this.expanded = true;
-      this.pauseAll();
-      this.layout();
+      this.expandedPositions.add(position);
+      this.pausePosition(position);
+      this.scheduleLayout(position);
+    };
+
+    const onMouseLeave = () => {
+      if (!this.options.expandOnHover) return;
+      this.expandedPositions.delete(position);
+      this.resumePosition(position);
+      this.scheduleLayout(position);
+    };
+
+    container.addEventListener('mouseenter', onMouseEnter);
+    container.addEventListener('mouseleave', onMouseLeave);
+    this.containerCleanups.set(position, () => {
+      container.removeEventListener('mouseenter', onMouseEnter);
+      container.removeEventListener('mouseleave', onMouseLeave);
     });
 
-    container.addEventListener('mouseleave', () => {
-      if (!this.options.expandOnHover) return;
-      this.expanded = false;
-      this.resumeAll();
-      this.layout();
-    });
-
-    document.body.appendChild(container);
-    this.container = container;
+    if (!existing) document.body.appendChild(container);
+    this.containers.set(position, container);
     this.bindKeyboard();
+    return container;
   }
 
   private bindKeyboard(): void {
@@ -215,10 +244,11 @@ export class Toaster {
 
   private createToastElement(options: ToastOptions): HTMLElement {
     const toast = document.createElement('div');
-    toast.className = `sonner-toast${options.className ? ` ${options.className}` : ''}`;
+    toast.className = `vt-toast${options.className ? ` ${options.className}` : ''}`;
     toast.dataset.toastId = String(options.id);
     toast.dataset.type = options.type ?? 'default';
     toast.dataset.rich = String(Boolean(options.richColors));
+    toast.dataset.close = String(Boolean(options.closeButton));
     toast.dataset.animation = options.animation ?? this.options.animation;
     toast.dataset.swiping = 'false';
     toast.setAttribute('role', 'status');
@@ -227,7 +257,7 @@ export class Toaster {
 
     const customElement = options.data?.customElement;
     if (customElement instanceof HTMLElement) {
-      toast.classList.add('sonner-toast-custom');
+      toast.classList.add('vt-toast-custom');
       toast.appendChild(customElement);
       return toast;
     }
@@ -236,16 +266,16 @@ export class Toaster {
     if (icon) toast.appendChild(icon);
 
     const content = document.createElement('div');
-    content.className = 'sonner-content';
+    content.className = 'vt-content';
 
     const title = document.createElement('p');
-    title.className = 'sonner-title';
+    title.className = 'vt-title';
     title.appendChild(safeText(options.title ?? ''));
     content.appendChild(title);
 
     if (options.description) {
       const description = document.createElement('p');
-      description.className = 'sonner-description';
+      description.className = 'vt-description';
       description.appendChild(safeText(options.description));
       content.appendChild(description);
     }
@@ -257,16 +287,16 @@ export class Toaster {
 
     if (options.progressBar && Number.isFinite(options.duration)) {
       const progress = document.createElement('span');
-      progress.className = 'sonner-progress';
+      progress.className = 'vt-progress';
       progress.style.animationDuration = `${options.duration}ms`;
       toast.appendChild(progress);
     }
 
     if (options.closeButton) {
       const close = document.createElement('button');
-      close.className = 'sonner-close';
+      close.className = 'vt-close';
       close.type = 'button';
-      close.ariaLabel = 'Dismiss toast';
+      close.setAttribute('aria-label', 'Close notification');
       close.innerHTML = icons.close;
       toast.appendChild(close);
     }
@@ -277,12 +307,12 @@ export class Toaster {
   private createIcon(options: ToastOptions): HTMLElement | null {
     if (options.icon === null) return null;
     const wrapper = document.createElement('div');
-    wrapper.className = 'sonner-icon';
+    wrapper.className = 'vt-icon';
     wrapper.setAttribute('aria-hidden', 'true');
 
     if (options.type === 'loading') {
       const spinner = document.createElement('span');
-      spinner.className = 'sonner-spinner';
+      spinner.className = 'vt-spinner';
       wrapper.appendChild(spinner);
       return wrapper;
     }
@@ -307,11 +337,11 @@ export class Toaster {
     if (!options.action && !options.cancel) return null;
 
     const actions = document.createElement('div');
-    actions.className = 'sonner-action-container';
+    actions.className = 'vt-action-container';
 
     if (options.cancel) {
       const cancel = document.createElement('button');
-      cancel.className = 'sonner-button sonner-cancel-button';
+      cancel.className = 'vt-button vt-cancel-button';
       cancel.type = 'button';
       cancel.appendChild(safeText(options.cancel.label));
       actions.appendChild(cancel);
@@ -319,7 +349,7 @@ export class Toaster {
 
     if (options.action) {
       const action = document.createElement('button');
-      action.className = 'sonner-button sonner-action-button';
+      action.className = 'vt-button vt-action-button';
       action.type = 'button';
       action.appendChild(safeText(options.action.label));
       actions.appendChild(action);
@@ -330,9 +360,9 @@ export class Toaster {
 
   private bindToastEvents(toast: InternalToast): void {
     const element = toast.element;
-    const close = element.querySelector<HTMLButtonElement>('.sonner-close');
-    const action = element.querySelector<HTMLButtonElement>('.sonner-action-button');
-    const cancel = element.querySelector<HTMLButtonElement>('.sonner-cancel-button');
+    const close = element.querySelector<HTMLButtonElement>('.vt-close');
+    const action = element.querySelector<HTMLButtonElement>('.vt-action-button');
+    const cancel = element.querySelector<HTMLButtonElement>('.vt-cancel-button');
 
     const onClose = () => this.removeToast(toast.id);
     close?.addEventListener('click', onClose);
@@ -369,7 +399,7 @@ export class Toaster {
 
     if (this.options.swipeToDismiss) {
       toast.cleanup.push(bindSwipeGesture(toast, {
-        position: this.options.position,
+        position: toast.position,
         onDismiss: () => this.removeToast(toast.id),
       }));
     }
@@ -399,12 +429,12 @@ export class Toaster {
     this.startTimer(toast);
   }
 
-  private pauseAll(): void {
-    this.queue.active().forEach((toast) => this.pauseTimer(toast));
+  private pausePosition(position: ToastPosition): void {
+    this.queue.activeByPosition(position).forEach((toast) => this.pauseTimer(toast));
   }
 
-  private resumeAll(): void {
-    this.queue.active().forEach((toast) => this.resumeTimer(toast));
+  private resumePosition(position: ToastPosition): void {
+    this.queue.activeByPosition(position).forEach((toast) => this.resumeTimer(toast));
   }
 
   private removeToast(id: ToastId): void {
@@ -414,28 +444,52 @@ export class Toaster {
     toast.removed = true;
     if (toast.timer) window.clearTimeout(toast.timer);
     markRemoving(toast);
-    this.layout();
+    this.scheduleLayout(toast.position);
 
     afterTransition(toast.element, () => {
       toast.cleanup.forEach((cleanup) => cleanup());
       removeElement(toast.element);
       this.queue.remove(id);
-      this.layout();
-      this.cleanupContainer();
+      this.scheduleLayout(toast.position);
+      this.cleanupContainer(toast.position);
     });
   }
 
-  private layout(): void {
-    if (!this.container) return;
-    layoutToasts(this.queue.active(), this.options, this.expanded);
+  private scheduleLayout(position: ToastPosition): void {
+    this.pendingLayouts.add(position);
+    if (this.layoutFrame) return;
+
+    this.layoutFrame = window.requestAnimationFrame(() => {
+      const positions = [...this.pendingLayouts];
+      this.pendingLayouts.clear();
+      this.layoutFrame = undefined;
+      positions.forEach((nextPosition) => this.layout(nextPosition));
+    });
   }
 
-  private cleanupContainer(): void {
-    if (!this.container || this.queue.active().length > 0) return;
-    this.keyboardCleanup?.();
-    this.keyboardCleanup = undefined;
-    removeElement(this.container);
-    this.container = undefined;
-    this.expanded = false;
+  private layout(position: ToastPosition): void {
+    const container = this.containers.get(position);
+    if (!container) return;
+    layoutToasts(this.queue.activeByPosition(position), this.options, this.expandedPositions.has(position));
+  }
+
+  private cleanupContainer(position: ToastPosition): void {
+    const container = this.containers.get(position);
+    if (!container || this.queue.activeByPosition(position).length > 0) return;
+
+    this.containerCleanups.get(position)?.();
+    this.containerCleanups.delete(position);
+
+    if (container.dataset.vtCreated === 'true') {
+      removeElement(container);
+    }
+
+    this.containers.delete(position);
+    this.expandedPositions.delete(position);
+
+    if (this.queue.active().length === 0) {
+      this.keyboardCleanup?.();
+      this.keyboardCleanup = undefined;
+    }
   }
 }

@@ -1,32 +1,36 @@
 {
-  "name": "vanilla-sonner",
+  "name": "vanilla-toast",
   "version": "1.0.0",
-  "description": "A lightweight, framework-independent toast notification library inspired by Sonner.",
+  "description": "A lightweight, framework-independent toast notification library for Vanilla JavaScript.",
   "type": "module",
   "license": "MIT",
   "author": "",
   "keywords": [
     "toast",
     "notification",
-    "sonner",
     "vanilla",
     "javascript",
     "typescript",
     "browser"
   ],
-  "main": "./dist/vanilla-sonner.umd.js",
-  "module": "./dist/vanilla-sonner.es.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vanilla-toast/vanilla-toast.git"
+  },
+  "homepage": "https://github.com/vanilla-toast/vanilla-toast#readme",
+  "main": "./dist/vanilla-toast.umd.js",
+  "module": "./dist/vanilla-toast.es.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/vanilla-sonner.es.js",
-      "require": "./dist/vanilla-sonner.umd.js"
+      "import": "./dist/vanilla-toast.es.js",
+      "require": "./dist/vanilla-toast.umd.js"
     },
-    "./style.css": "./dist/vanilla-sonner.css",
-    "./vanilla-sonner.css": "./dist/vanilla-sonner.css",
-    "./vanilla-sonner.iife.js": "./dist/vanilla-sonner.iife.js",
-    "./vanilla-sonner.umd.js": "./dist/vanilla-sonner.umd.js"
+    "./style.css": "./dist/vanilla-toast.css",
+    "./vanilla-toast.css": "./dist/vanilla-toast.css",
+    "./vanilla-toast.iife.js": "./dist/vanilla-toast.iife.js",
+    "./vanilla-toast.umd.js": "./dist/vanilla-toast.umd.js"
   },
   "files": [
     "dist",

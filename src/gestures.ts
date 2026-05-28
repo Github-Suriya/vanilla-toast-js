@@ -17,9 +17,9 @@ export function bindSwipeGesture(toast: InternalToast, options: GestureOptions):
 
   const reset = () => {
     element.dataset.swiping = 'false';
-    element.style.setProperty('--sonner-swipe-x', '0px');
-    element.style.setProperty('--sonner-swipe-y', '0px');
-    element.style.setProperty('--sonner-swipe-opacity', '1');
+    element.style.setProperty('--vt-swipe-x', '0px');
+    element.style.setProperty('--vt-swipe-y', '0px');
+    element.style.setProperty('--vt-swipe-opacity', '1');
   };
 
   const onPointerDown = (event: PointerEvent) => {
@@ -41,9 +41,9 @@ export function bindSwipeGesture(toast: InternalToast, options: GestureOptions):
     const primaryDelta = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
     const opacity = 1 - clamp(Math.abs(primaryDelta) / 180, 0, 0.65);
 
-    element.style.setProperty('--sonner-swipe-x', `${deltaX}px`);
-    element.style.setProperty('--sonner-swipe-y', `${deltaY}px`);
-    element.style.setProperty('--sonner-swipe-opacity', String(opacity));
+    element.style.setProperty('--vt-swipe-x', `${deltaX}px`);
+    element.style.setProperty('--vt-swipe-y', `${deltaY}px`);
+    element.style.setProperty('--vt-swipe-opacity', String(opacity));
   };
 
   const onPointerUp = (event: PointerEvent) => {

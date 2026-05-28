@@ -12,7 +12,7 @@ export function markRemoving(toast: InternalToast): void {
 }
 
 export function layoutToasts(toasts: InternalToast[], options: ToasterOptions, expanded: boolean): void {
-  const position = options.position;
+  const position = toasts[0]?.position ?? options.position;
   const top = isTopPosition(position);
   let offset = 0;
 
@@ -28,9 +28,9 @@ export function layoutToasts(toasts: InternalToast[], options: ToasterOptions, e
     element.style.zIndex = String(toasts.length - index);
     element.style.opacity = hidden ? '0' : '1';
     element.style.pointerEvents = hidden ? 'none' : 'auto';
-    element.style.setProperty('--sonner-y', `${y}px`);
-    element.style.setProperty('--sonner-scale', String(scale));
-    element.style.setProperty('--sonner-x', isCenterPosition(position) ? '-50%' : '0px');
+    element.style.setProperty('--vt-y', `${y}px`);
+    element.style.setProperty('--vt-scale', String(scale));
+    element.style.setProperty('--vt-x', isCenterPosition(position) ? '-50%' : '0px');
     element.dataset.front = index === 0 ? 'true' : 'false';
 
     offset += toast.height + options.gap;

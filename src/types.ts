@@ -68,6 +68,7 @@ export interface InternalToast extends Required<Pick<ToastOptions, 'type' | 'dis
   id: ToastId;
   title: string;
   description?: string;
+  position: ToastPosition;
   duration: number;
   remaining: number;
   createdAt: number;
@@ -91,6 +92,7 @@ export interface ToastApi {
   loading(message: string, options?: Omit<ToastOptions, 'type'>): ToastId;
   custom(element: HTMLElement, options?: ToastOptions): ToastId;
   dismiss(id?: ToastId): void;
+  dismissAll(): void;
   update(id: ToastId, options: ToastUpdateOptions): void;
   promise<T>(promise: Promise<T> | (() => Promise<T>), messages: ToastPromiseMessages<T>, options?: ToastOptions): Promise<T>;
   configure(options: Partial<ToasterOptions>): void;
@@ -98,8 +100,9 @@ export interface ToastApi {
 
 declare global {
   interface Window {
+    vanillaToast?: ToastApi;
     toast?: ToastApi;
-    VanillaSonner?: {
+    VanillaToast?: {
       toast: ToastApi;
     };
   }

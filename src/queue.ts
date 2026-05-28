@@ -1,4 +1,4 @@
-import type { InternalToast } from './types';
+import type { InternalToast, ToastPosition } from './types';
 
 export class ToastQueue {
   private items: InternalToast[] = [];
@@ -19,6 +19,10 @@ export class ToastQueue {
 
   active(): InternalToast[] {
     return this.items.filter((toast) => !toast.removed);
+  }
+
+  activeByPosition(position: ToastPosition): InternalToast[] {
+    return this.items.filter((toast) => !toast.removed && toast.position === position);
   }
 
   all(): InternalToast[] {

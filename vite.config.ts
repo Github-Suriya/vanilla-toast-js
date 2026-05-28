@@ -4,12 +4,12 @@ export default defineConfig({
   build: {
     lib: {
       entry: 'src/index.ts',
-      name: 'VanillaSonner',
+      name: 'VanillaToast',
       fileName: (_format, entryName) => {
-        if (entryName === 'style') return 'vanilla-sonner.css';
-        return 'vanilla-sonner';
+        if (entryName === 'style') return 'vanilla-toast.css';
+        return 'vanilla-toast';
       },
-      cssFileName: 'vanilla-sonner',
+      cssFileName: 'vanilla-toast',
       formats: ['es', 'umd', 'iife'],
     },
     rollupOptions: {
@@ -17,7 +17,7 @@ export default defineConfig({
         exports: 'named',
         entryFileNames: (chunk) => {
           const format = chunk.facadeModuleId?.includes('src/index.ts') ? '[format]' : '[name]';
-          return `vanilla-sonner.${format}.js`;
+          return `vanilla-toast.${format}.js`;
         },
       },
     },

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vanilla Sonner Demo</title>
+    <title>Vanilla Toast Demo</title>
     <script type="module" src="/src/index.ts"></script>
     <style>
       body {
@@ -56,7 +56,7 @@
   </head>
   <body>
     <main>
-      <h1>Vanilla Sonner</h1>
+      <h1>Vanilla Toast</h1>
       <p>A framework-independent toast library with stacked notifications, promise handling, gestures, and CDN-ready builds.</p>
       <div class="grid">
         <button onclick="toast('Event created')">Default</button>
@@ -64,7 +64,11 @@
         <button onclick="toast.error('Failed to save', { richColors: true })">Error</button>
         <button onclick="toast.warning('Check your input')">Warning</button>
         <button onclick="toast.info('New version available')">Info</button>
+        <button onclick="toast.success('Top right', { position: 'top-right', closeButton: true })">Top Right</button>
+        <button onclick="toast.info('Top center', { position: 'top-center', closeButton: true })">Top Center</button>
+        <button onclick="toast.warning('Bottom left', { position: 'bottom-left', closeButton: true })">Bottom Left</button>
         <button onclick="toast.promise(new Promise(resolve => setTimeout(resolve, 1600)), { loading: 'Loading...', success: 'Done!', error: 'Failed' })">Promise</button>
+        <button onclick="toast.dismissAll()">Dismiss All</button>
       </div>
     </main>
   </body>

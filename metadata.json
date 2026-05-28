@@ -1,6 +1,6 @@
 {
-  "name": "Vanilla Sonner",
-  "description": "Vanilla JS replica of the popular Sonner toast library, bringing elegant stacked toasts to any plain JS framework.",
+  "name": "Vanilla Toast",
+  "description": "A standalone Vanilla JavaScript toast library with elegant stacking, gestures, and framework-independent builds.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
