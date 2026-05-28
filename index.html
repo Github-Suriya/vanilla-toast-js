@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vanilla Sonner Demo</title>
+    <script type="module" src="/src/index.ts"></script>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #f7f7f8;
+        color: #18181b;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      main {
+        width: min(680px, calc(100vw - 32px));
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(32px, 6vw, 56px);
+        letter-spacing: 0;
+      }
+
+      p {
+        margin: 0 0 24px;
+        color: #64646d;
+        line-height: 1.6;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+      }
+
+      button {
+        min-height: 42px;
+        border: 1px solid #dedee3;
+        border-radius: 8px;
+        background: white;
+        color: inherit;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 600;
+      }
+
+      button:hover {
+        border-color: #b9b9c2;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Vanilla Sonner</h1>
+      <p>A framework-independent toast library with stacked notifications, promise handling, gestures, and CDN-ready builds.</p>
+      <div class="grid">
+        <button onclick="toast('Event created')">Default</button>
+        <button onclick="toast.success('Saved!', { description: 'Your changes are live.' })">Success</button>
+        <button onclick="toast.error('Failed to save', { richColors: true })">Error</button>
+        <button onclick="toast.warning('Check your input')">Warning</button>
+        <button onclick="toast.info('New version available')">Info</button>
+        <button onclick="toast.promise(new Promise(resolve => setTimeout(resolve, 1600)), { loading: 'Loading...', success: 'Done!', error: 'Failed' })">Promise</button>
+      </div>
+    </main>
+  </body>
+</html>

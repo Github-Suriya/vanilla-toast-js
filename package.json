@@ -1,0 +1,53 @@
+{
+  "name": "vanilla-sonner",
+  "version": "1.0.0",
+  "description": "A lightweight, framework-independent toast notification library inspired by Sonner.",
+  "type": "module",
+  "license": "MIT",
+  "author": "",
+  "keywords": [
+    "toast",
+    "notification",
+    "sonner",
+    "vanilla",
+    "javascript",
+    "typescript",
+    "browser"
+  ],
+  "main": "./dist/vanilla-sonner.umd.js",
+  "module": "./dist/vanilla-sonner.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/vanilla-sonner.es.js",
+      "require": "./dist/vanilla-sonner.umd.js"
+    },
+    "./style.css": "./dist/vanilla-sonner.css",
+    "./vanilla-sonner.css": "./dist/vanilla-sonner.css",
+    "./vanilla-sonner.iife.js": "./dist/vanilla-sonner.iife.js",
+    "./vanilla-sonner.umd.js": "./dist/vanilla-sonner.umd.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "dev": "vite --host=0.0.0.0 --port=3000",
+    "clean": "node -e \"import('node:fs').then(fs=>fs.rmSync('dist',{recursive:true,force:true}))\"",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build": "npm run clean && npm run build:types && vite build",
+    "preview": "vite preview --host=0.0.0.0",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.3"
+  }
+}
