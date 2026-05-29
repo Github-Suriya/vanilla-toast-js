@@ -6,6 +6,7 @@
   "license": "MIT",
   "author": "",
   "keywords": [
+    "vanilla-toast-js",
     "toast",
     "notification",
     "vanilla",
@@ -15,9 +16,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vanilla-toast/vanilla-toast.git"
+    "url": "git+https://github.com/Github-Suriya/vanilla-toast-js.git"
   },
-  "homepage": "https://github.com/vanilla-toast/vanilla-toast#readme",
+  "homepage": "https://github.com/Github-Suriya/vanilla-toast-js#readme",
+  "bugs": {
+    "url": "https://github.com/Github-Suriya/vanilla-toast-js/issues"
+  },
   "main": "./dist/vanilla-toast.umd.js",
   "module": "./dist/vanilla-toast.es.js",
   "types": "./dist/index.d.ts",

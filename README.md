@@ -1,18 +1,21 @@
 # Vanilla Toast
 
+[![npm version](https://img.shields.io/npm/v/vanilla-toast-js.svg)](https://www.npmjs.com/package/vanilla-toast-js)
+[![npm downloads](https://img.shields.io/npm/dm/vanilla-toast-js.svg)](https://www.npmjs.com/package/vanilla-toast-js)
+
 A lightweight, standalone toast notification library for Vanilla JavaScript. Vanilla Toast ships with TypeScript types, CDN-ready bundles, smooth stacked animations, promise handling, swipe dismissal, accessible controls, and zero framework dependencies.
 
 ## Installation
 
 ```bash
-npm install vanilla-toast
+npm install vanilla-toast-js
 ```
 
 ## CDN Usage
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/vanilla-toast/dist/vanilla-toast.css" />
-<script src="https://unpkg.com/vanilla-toast/dist/vanilla-toast.iife.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanilla-toast-js/dist/vanilla-toast.css" />
+<script src="https://cdn.jsdelivr.net/npm/vanilla-toast-js/dist/vanilla-toast.iife.js"></script>
 <script>
   vanillaToast.success('Saved!');
 </script>
@@ -20,11 +23,21 @@ npm install vanilla-toast
 
 The browser bundle exposes `window.vanillaToast`, `window.VanillaToast.toast`, and the convenience alias `window.toast`.
 
+## UNPKG Usage
+
+```html
+<link rel="stylesheet" href="https://unpkg.com/vanilla-toast-js/dist/vanilla-toast.css" />
+<script src="https://unpkg.com/vanilla-toast-js/dist/vanilla-toast.iife.js"></script>
+<script>
+  vanillaToast.success('Saved!');
+</script>
+```
+
 ## NPM Usage
 
 ```ts
-import { toast } from 'vanilla-toast';
-import 'vanilla-toast/style.css';
+import { toast } from 'vanilla-toast-js';
+import 'vanilla-toast-js/style.css';
 
 toast.success('Saved!');
 ```
@@ -239,7 +252,7 @@ import type {
   ToastPosition,
   ToasterOptions,
   VanillaToastOptions,
-} from 'vanilla-toast';
+} from 'vanilla-toast-js';
 
 const options: ToastOptions = {
   position: 'top-right',
@@ -264,13 +277,37 @@ toast.promise<T>(promise: Promise<T> | (() => Promise<T>), messages: ToastPromis
 toast.configure(options: Partial<ToasterOptions>): void;
 ```
 
-## Migration Guide
+## Migration from vanilla-toast
 
-1. Install `vanilla-toast`.
-2. Import the CSS once in your app entry.
-3. Replace script-tag usage with `vanillaToast` or keep using the `toast` alias.
-4. Replace custom CSS selectors with the `vt-*` class names and `--vt-*` variables.
-5. Use `toast.dismissAll()` for explicit all-toast dismissal.
+Replace:
+
+```bash
+npm install vanilla-toast
+```
+
+with:
+
+```bash
+npm install vanilla-toast-js
+```
+
+Replace:
+
+```ts
+import { toast } from 'vanilla-toast';
+```
+
+with:
+
+```ts
+import { toast } from 'vanilla-toast-js';
+```
+
+Import the CSS once in your app entry:
+
+```ts
+import 'vanilla-toast-js/style.css';
+```
 
 ## FAQ
 
@@ -280,7 +317,7 @@ No. It works with plain HTML, Vite, Astro, Laravel, Rails, static sites, and fra
 
 **Can I use it from a CDN?**
 
-Yes. Include `vanilla-toast.css` and `vanilla-toast.iife.js`.
+Yes. Include `https://cdn.jsdelivr.net/npm/vanilla-toast-js/dist/vanilla-toast.css` and `https://cdn.jsdelivr.net/npm/vanilla-toast-js/dist/vanilla-toast.iife.js`, or use the matching UNPKG URLs.
 
 **Can users dismiss with the keyboard?**
 
