@@ -14,40 +14,63 @@ export type ToastAnimation = 'slide' | 'fade' | 'scale' | 'bounce';
 
 export type ToastId = string | number;
 
+/** A clickable action rendered inside a toast. */
 export interface ToastAction {
+  /** Button label shown to the user. */
   label: string;
+  /** Called when the action button is clicked. The toast id is passed as the second argument. */
   onClick: (event: MouseEvent, toastId: ToastId) => void;
 }
 
+/** Options for a single Vanilla Toast notification. */
 export interface ToastOptions {
+  /** Custom id. Reusing an id updates the existing toast. */
   id?: ToastId;
+  /** Primary toast text. Usually passed as the first argument instead. */
   title?: string;
+  /** Secondary text shown below the title. */
   description?: string;
+  /** Visual intent and icon. */
   type?: ToastType;
+  /** Auto-dismiss duration in milliseconds. Use Infinity for persistent toasts. */
   duration?: number;
+  /** Custom icon markup or element. Set to null to hide the icon. */
   icon?: string | HTMLElement | null;
+  /** Primary action button. */
   action?: ToastAction;
+  /** Secondary action button. */
   cancel?: ToastAction;
+  /** Use tinted backgrounds for success, error, warning, and info toasts. */
   richColors?: boolean;
+  /** Render an accessible close button. */
   closeButton?: boolean;
+  /** Render the auto-dismiss progress indicator. */
   progressBar?: boolean;
+  /** Animation preset used for entry, layout, and exit transitions. */
   animation?: ToastAnimation;
+  /** Screen position for this toast. Overrides the global default. */
   position?: ToastPosition;
+  /** Whether pointer swipe and close interactions may dismiss the toast. */
   dismissible?: boolean;
+  /** Extra class name added to the toast element. */
   className?: string;
+  /** Internal or integration metadata. */
   data?: Record<string, unknown>;
 }
 
+/** Options accepted by toast.update(). */
 export interface ToastUpdateOptions extends ToastOptions {
   title?: string;
 }
 
+/** Messages used by toast.promise(). */
 export interface ToastPromiseMessages<T = unknown> {
   loading: string | ToastOptions;
   success: string | ToastOptions | ((data: T) => string | ToastOptions);
   error: string | ToastOptions | ((error: unknown) => string | ToastOptions);
 }
 
+/** Global Vanilla Toast configuration. */
 export interface ToasterOptions {
   position: ToastPosition;
   duration: number;
@@ -63,6 +86,9 @@ export interface ToasterOptions {
   keyboardDismiss: boolean;
   expandOnHover: boolean;
 }
+
+export type VanillaToastOptions = ToastOptions;
+export type VanillaToastConfig = ToasterOptions;
 
 export interface InternalToast extends Required<Pick<ToastOptions, 'type' | 'dismissible'>> {
   id: ToastId;

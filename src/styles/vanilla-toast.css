@@ -37,11 +37,12 @@
   z-index: var(--vt-z-index);
   width: var(--vt-width);
   max-width: var(--vt-mobile-width);
-  pointer-events: none;
+  pointer-events: auto;
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transition: height 400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [data-vt-toaster][data-position^='top'],
@@ -112,7 +113,7 @@
 }
 
 .vt-toast[data-close='true'] {
-  padding-right: 42px;
+  padding-right: 38px;
 }
 
 [data-position^='top'] .vt-toast {
@@ -282,26 +283,31 @@
 
 .vt-button:focus-visible,
 .vt-close:focus-visible {
-  outline: 2px solid currentColor;
+  outline: 2px solid color-mix(in srgb, currentColor 42%, transparent);
   outline-offset: 2px;
 }
 
 .vt-close {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 12px;
+  right: 12px;
   display: inline-flex;
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--vt-border);
-  border-radius: 999px;
+  border: 0;
+  border-radius: 5px;
   background: transparent;
   color: var(--vt-muted);
   cursor: pointer;
-  opacity: 0.68;
-  transition: opacity 160ms ease, color 160ms ease, background 160ms ease;
+  font: inherit;
+  line-height: 1;
+  opacity: 0.4;
+  padding: 0;
+  transition: opacity 160ms ease, color 160ms ease, background-color 160ms ease;
 }
 
 .vt-toast:hover .vt-close,
@@ -310,18 +316,25 @@
 }
 
 .vt-close:hover {
-  background: color-mix(in srgb, currentColor 8%, transparent);
+  background: color-mix(in srgb, currentColor 9%, transparent);
   color: var(--vt-color);
+}
+
+.vt-close svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.2;
 }
 
 .vt-progress {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 2px;
+  right: 1px;
+  bottom: 1px;
+  left: 1px;
+  height: 3px;
   overflow: hidden;
-  border-radius: 0 0 var(--vt-radius) var(--vt-radius);
+  border-radius: 999px;
+  pointer-events: none;
 }
 
 .vt-progress::before {

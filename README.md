@@ -1,6 +1,6 @@
 # Vanilla Toast
 
-A lightweight standalone toast notification library for Vanilla JavaScript. It is framework independent, mobile friendly, accessible, and ships with npm and CDN-ready builds.
+A lightweight, standalone toast notification library for Vanilla JavaScript. Vanilla Toast ships with TypeScript types, CDN-ready bundles, smooth stacked animations, promise handling, swipe dismissal, accessible controls, and zero framework dependencies.
 
 ## Installation
 
@@ -18,50 +18,92 @@ npm install vanilla-toast
 </script>
 ```
 
-The IIFE build exposes `window.vanillaToast`, `window.VanillaToast.toast`, and the convenience alias `window.toast`.
+The browser bundle exposes `window.vanillaToast`, `window.VanillaToast.toast`, and the convenience alias `window.toast`.
 
-## npm Usage
+## NPM Usage
 
 ```ts
 import { toast } from 'vanilla-toast';
 import 'vanilla-toast/style.css';
 
-toast('My first toast');
 toast.success('Saved!');
-toast.error('Something went wrong');
 ```
 
-## API
+## Basic Examples
 
 ```ts
-toast('Message');
+toast('Event created');
 
+toast('Event created', {
+  description: 'Sunday at 9:00 AM',
+  closeButton: true,
+});
+```
+
+## Toast Types
+
+```ts
+toast('Default message');
 toast.success('Saved');
 toast.error('Failed');
-toast.warning('Warning');
-toast.info('Info');
-toast.loading('Loading');
+toast.warning('Check your input');
+toast.info('New version available');
+toast.loading('Uploading...');
 ```
 
-Every toast method returns an id:
+## Positioning
+
+Each position gets an independent container and stack.
 
 ```ts
-const id = toast.loading('Uploading...');
+toast.success('Top right', { position: 'top-right' });
+toast.info('Bottom center', { position: 'bottom-center' });
+```
 
-toast.update(id, {
-  title: 'Upload complete',
-  type: 'success',
+Supported positions:
+
+- `top-left`
+- `top-center`
+- `top-right`
+- `bottom-left`
+- `bottom-center`
+- `bottom-right`
+
+## Close Button
+
+```ts
+toast.success('Saved', {
+  closeButton: true,
 });
-
-toast.dismiss(id);
-toast.dismissAll();
 ```
 
-Dismiss all visible toasts:
+Enable close buttons globally:
 
 ```ts
-toast.dismiss();
-toast.dismissAll();
+toast.configure({
+  closeButton: true,
+});
+```
+
+Close buttons are keyboard focusable and use `aria-label="Close notification"`.
+
+## Progress Bar
+
+The progress bar mirrors the auto-dismiss timer. It pauses while the stack is hovered or while focus is inside a toast, then resumes when interaction leaves.
+
+```ts
+toast.info('Syncing...', {
+  duration: 6000,
+  progressBar: true,
+});
+```
+
+Disable it per toast:
+
+```ts
+toast('Plain message', {
+  progressBar: false,
+});
 ```
 
 ## Promise Toasts
@@ -74,10 +116,10 @@ toast.promise(fetch('/api/save'), {
 });
 ```
 
-Messages can also be functions or full toast options:
+Messages may be strings, option objects, or functions.
 
 ```ts
-toast.promise(fetchUser(), {
+toast.promise(loadUser(), {
   loading: { title: 'Loading user...', closeButton: true },
   success: (user) => `Welcome ${user.name}`,
   error: (error) => ({
@@ -87,16 +129,39 @@ toast.promise(fetchUser(), {
 });
 ```
 
-## Custom Content
+## Update Toasts
 
 ```ts
-const element = document.createElement('div');
-element.innerHTML = '<strong>Custom toast</strong>';
+const id = toast.loading('Uploading...', {
+  closeButton: true,
+});
 
-toast.custom(element, {
-  duration: 6000,
+toast.update(id, {
+  title: 'Upload complete',
+  type: 'success',
+  duration: 3000,
 });
 ```
+
+Updates preserve the toast id and rebuild event listeners safely.
+
+## Dismiss Toast
+
+```ts
+const id = toast.success('Saved');
+
+toast.dismiss(id);
+```
+
+Dismissal plays the exit animation, clears timers, removes listeners, removes the DOM node, and updates the stack.
+
+## Dismiss All
+
+```ts
+toast.dismissAll();
+```
+
+`toast.dismiss()` with no id is also supported for compatibility.
 
 ## Configuration
 
@@ -104,83 +169,40 @@ toast.custom(element, {
 toast.configure({
   position: 'bottom-right',
   duration: 4000,
-  richColors: true,
+  richColors: false,
   closeButton: true,
+  progressBar: true,
   maxVisible: 5,
   theme: 'system',
   animation: 'slide',
+  pauseOnHover: true,
+  swipeToDismiss: true,
+  keyboardDismiss: true,
+  expandOnHover: true,
 });
 ```
 
-Per-toast positioning overrides the global default:
+## Themes
 
 ```ts
-toast.success('Saved!', {
-  position: 'top-right',
-  closeButton: true,
+toast.configure({
+  theme: 'dark',
 });
 ```
 
-Supported positions:
+Supported themes:
 
-- `top-left`
-- `top-center`
-- `top-right`
-- `bottom-left`
-- `bottom-center`
-- `bottom-right`
+- `light`
+- `dark`
+- `system`
 
-Supported animations:
-
-- `slide`
-- `fade`
-- `scale`
-- `bounce`
-
-## Toast Options
-
-```ts
-toast.success('Event created', {
-  description: 'Sunday at 9:00 AM',
-  duration: 5000,
-  richColors: true,
-  closeButton: true,
-  progressBar: true,
-  action: {
-    label: 'Undo',
-    onClick: () => console.log('Undo'),
-  },
-  cancel: {
-    label: 'Cancel',
-    onClick: () => console.log('Cancel'),
-  },
-});
-```
-
-## Features
-
-- Pure Vanilla JavaScript with TypeScript types
-- ESM, UMD, and IIFE builds
-- Global `vanillaToast` for CDN usage
-- Convenience `toast` alias for script tags
-- Independent containers for each toast position
-- Stacking with hover expansion
-- Queue visibility via `maxVisible`
-- Auto dismiss with progress bar
-- Pause on hover and focus
-- Swipe dismiss with touch and pointer support
-- Escape key dismiss
-- Dark, light, and system themes
-- Rich colors
-- Promise and update handling
-- Accessible `role="status"` and `aria-live="polite"`
-
-## CSS Customization
+Customize with CSS variables:
 
 ```css
 :root {
   --vt-bg: #ffffff;
   --vt-color: #171717;
+  --vt-border: #e8e8e8;
   --vt-gap: 14px;
   --vt-width: 356px;
   --vt-radius: 8px;
@@ -189,32 +211,124 @@ toast.success('Event created', {
 }
 ```
 
-## TypeScript
-
-Types are included. The package exports `ToastOptions`, `ToastId`, `ToasterOptions`, and related API types.
+## Animations
 
 ```ts
-import type { ToastOptions } from 'vanilla-toast';
+toast.success('Saved', {
+  animation: 'bounce',
+});
+```
+
+Supported animations:
+
+- `slide`
+- `fade`
+- `scale`
+- `bounce`
+
+Animations use GPU-friendly transforms and respect `prefers-reduced-motion`.
+
+## TypeScript Support
+
+Types are included and exported from the package.
+
+```ts
+import type {
+  ToastId,
+  ToastOptions,
+  ToastPosition,
+  ToasterOptions,
+  VanillaToastOptions,
+} from 'vanilla-toast';
 
 const options: ToastOptions = {
-  description: 'Typed options',
+  position: 'top-right',
   closeButton: true,
 };
 ```
 
-## Build
+## API Reference
 
-```bash
-npm run build
+```ts
+toast(message: string, options?: ToastOptions): ToastId;
+toast.success(message: string, options?: ToastOptions): ToastId;
+toast.error(message: string, options?: ToastOptions): ToastId;
+toast.warning(message: string, options?: ToastOptions): ToastId;
+toast.info(message: string, options?: ToastOptions): ToastId;
+toast.loading(message: string, options?: ToastOptions): ToastId;
+toast.custom(element: HTMLElement, options?: ToastOptions): ToastId;
+toast.update(id: ToastId, options: ToastUpdateOptions): void;
+toast.dismiss(id?: ToastId): void;
+toast.dismissAll(): void;
+toast.promise<T>(promise: Promise<T> | (() => Promise<T>), messages: ToastPromiseMessages<T>, options?: ToastOptions): Promise<T>;
+toast.configure(options: Partial<ToasterOptions>): void;
 ```
 
-The build outputs:
+## Migration Guide
 
-```text
-dist/
-  vanilla-toast.es.js
-  vanilla-toast.umd.js
-  vanilla-toast.iife.js
-  vanilla-toast.css
-  index.d.ts
+1. Install `vanilla-toast`.
+2. Import the CSS once in your app entry.
+3. Replace script-tag usage with `vanillaToast` or keep using the `toast` alias.
+4. Replace custom CSS selectors with the `vt-*` class names and `--vt-*` variables.
+5. Use `toast.dismissAll()` for explicit all-toast dismissal.
+
+## FAQ
+
+**Does Vanilla Toast require a framework?**
+
+No. It works with plain HTML, Vite, Astro, Laravel, Rails, static sites, and framework apps.
+
+**Can I use it from a CDN?**
+
+Yes. Include `vanilla-toast.css` and `vanilla-toast.iife.js`.
+
+**Can users dismiss with the keyboard?**
+
+Yes. Close buttons are native buttons, and `Escape` dismisses the newest active toast by default.
+
+**Can I disable swipe dismissal?**
+
+Yes.
+
+```ts
+toast.configure({ swipeToDismiss: false });
 ```
+
+## Examples
+
+Action toast:
+
+```ts
+toast('File deleted', {
+  action: {
+    label: 'Undo',
+    onClick: () => restoreFile(),
+  },
+  closeButton: true,
+});
+```
+
+Rich color toast:
+
+```ts
+toast.error('Payment failed', {
+  description: 'Please check your card details.',
+  richColors: true,
+});
+```
+
+Persistent loading toast:
+
+```ts
+const id = toast.loading('Processing...', {
+  duration: Infinity,
+});
+```
+
+## Browser Support
+
+Vanilla Toast targets modern evergreen browsers and uses standard DOM APIs, CSS custom properties, pointer events, and `requestAnimationFrame`.
+
+## License
+
+MIT

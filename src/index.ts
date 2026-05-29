@@ -20,4 +20,6 @@ export type {
   ToastType,
   ToastUpdateOptions,
   ToasterOptions,
+  VanillaToastConfig,
+  VanillaToastOptions,
 } from './types';

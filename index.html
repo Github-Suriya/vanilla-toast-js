@@ -68,6 +68,7 @@
         <button onclick="toast.info('Top center', { position: 'top-center', closeButton: true })">Top Center</button>
         <button onclick="toast.warning('Bottom left', { position: 'bottom-left', closeButton: true })">Bottom Left</button>
         <button onclick="toast.promise(new Promise(resolve => setTimeout(resolve, 1600)), { loading: 'Loading...', success: 'Done!', error: 'Failed' })">Promise</button>
+        <button onclick="window.demoToastId = toast.loading('Updating...', { closeButton: true, duration: Infinity, position: 'top-left' }); setTimeout(() => toast.update(window.demoToastId, { title: 'Updated!', type: 'success', position: 'bottom-right', animation: 'scale', closeButton: true, duration: 8000 }), 400)">Update</button>
         <button onclick="toast.dismissAll()">Dismiss All</button>
       </div>
     </main>

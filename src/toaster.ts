@@ -34,6 +34,8 @@ export class Toaster {
   private expandedPositions = new Set<ToastPosition>();
   private pendingLayouts = new Set<ToastPosition>();
   private containerCleanups = new Map<ToastPosition, () => void>();
+  private hoverCloseFrames = new Map<ToastPosition, number>();
+  private lastPointerPosition = { x: 0, y: 0 };
   private layoutFrame?: number;
   private keyboardCleanup?: () => void;
 
@@ -204,25 +206,29 @@ export class Toaster {
     container.setAttribute('aria-atomic', 'false');
     applyTheme(container, this.options.theme);
 
-    const onMouseEnter = () => {
-      if (!this.options.expandOnHover) return;
-      this.expandedPositions.add(position);
-      this.pausePosition(position);
-      this.scheduleLayout(position);
+    const onPointerMove = (event: PointerEvent) => {
+      this.lastPointerPosition = { x: event.clientX, y: event.clientY };
     };
 
-    const onMouseLeave = () => {
+    const onPointerEnter = (event: PointerEvent) => {
+      this.lastPointerPosition = { x: event.clientX, y: event.clientY };
       if (!this.options.expandOnHover) return;
-      this.expandedPositions.delete(position);
-      this.resumePosition(position);
-      this.scheduleLayout(position);
+      this.expandPosition(position);
     };
 
-    container.addEventListener('mouseenter', onMouseEnter);
-    container.addEventListener('mouseleave', onMouseLeave);
+    const onPointerLeave = (event: PointerEvent) => {
+      this.lastPointerPosition = { x: event.clientX, y: event.clientY };
+      if (!this.options.expandOnHover) return;
+      this.scheduleCollapseIfOutside(position, container);
+    };
+
+    container.addEventListener('pointermove', onPointerMove, { passive: true });
+    container.addEventListener('pointerenter', onPointerEnter);
+    container.addEventListener('pointerleave', onPointerLeave);
     this.containerCleanups.set(position, () => {
-      container.removeEventListener('mouseenter', onMouseEnter);
-      container.removeEventListener('mouseleave', onMouseLeave);
+      container.removeEventListener('pointermove', onPointerMove);
+      container.removeEventListener('pointerenter', onPointerEnter);
+      container.removeEventListener('pointerleave', onPointerLeave);
     });
 
     if (!existing) document.body.appendChild(container);
@@ -364,34 +370,59 @@ export class Toaster {
     const action = element.querySelector<HTMLButtonElement>('.vt-action-button');
     const cancel = element.querySelector<HTMLButtonElement>('.vt-cancel-button');
 
-    const onClose = () => this.removeToast(toast.id);
+    const stopPointerGesture = (event: PointerEvent) => event.stopPropagation();
+    const onClose = (event: MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.removeToast(toast.id);
+    };
     close?.addEventListener('click', onClose);
-    if (close) toast.cleanup.push(() => close.removeEventListener('click', onClose));
+    close?.addEventListener('pointerdown', stopPointerGesture);
+    if (close) {
+      toast.cleanup.push(() => {
+        close.removeEventListener('click', onClose);
+        close.removeEventListener('pointerdown', stopPointerGesture);
+      });
+    }
 
     const onAction = (event: MouseEvent) => {
+      event.stopPropagation();
       toast.options.action?.onClick(event, toast.id);
       this.removeToast(toast.id);
     };
     action?.addEventListener('click', onAction);
-    if (action) toast.cleanup.push(() => action.removeEventListener('click', onAction));
+    action?.addEventListener('pointerdown', stopPointerGesture);
+    if (action) {
+      toast.cleanup.push(() => {
+        action.removeEventListener('click', onAction);
+        action.removeEventListener('pointerdown', stopPointerGesture);
+      });
+    }
 
     const onCancel = (event: MouseEvent) => {
+      event.stopPropagation();
       toast.options.cancel?.onClick(event, toast.id);
       this.removeToast(toast.id);
     };
     cancel?.addEventListener('click', onCancel);
-    if (cancel) toast.cleanup.push(() => cancel.removeEventListener('click', onCancel));
+    cancel?.addEventListener('pointerdown', stopPointerGesture);
+    if (cancel) {
+      toast.cleanup.push(() => {
+        cancel.removeEventListener('click', onCancel);
+        cancel.removeEventListener('pointerdown', stopPointerGesture);
+      });
+    }
 
     if (this.options.pauseOnHover) {
       const pause = () => this.pauseTimer(toast);
-      const resume = () => this.resumeTimer(toast);
-      element.addEventListener('mouseenter', pause);
-      element.addEventListener('mouseleave', resume);
+      const resume = () => {
+        if (!this.expandedPositions.has(toast.position)) {
+          this.resumeTimer(toast);
+        }
+      };
       element.addEventListener('focusin', pause);
       element.addEventListener('focusout', resume);
       toast.cleanup.push(() => {
-        element.removeEventListener('mouseenter', pause);
-        element.removeEventListener('mouseleave', resume);
         element.removeEventListener('focusin', pause);
         element.removeEventListener('focusout', resume);
       });
@@ -437,6 +468,45 @@ export class Toaster {
     this.queue.activeByPosition(position).forEach((toast) => this.resumeTimer(toast));
   }
 
+  private expandPosition(position: ToastPosition): void {
+    const closeFrame = this.hoverCloseFrames.get(position);
+    if (closeFrame) {
+      window.cancelAnimationFrame(closeFrame);
+      this.hoverCloseFrames.delete(position);
+    }
+
+    if (!this.expandedPositions.has(position)) {
+      this.expandedPositions.add(position);
+      this.scheduleLayout(position);
+    }
+
+    this.pausePosition(position);
+  }
+
+  private collapsePosition(position: ToastPosition): void {
+    if (!this.expandedPositions.has(position)) return;
+    this.expandedPositions.delete(position);
+    this.resumePosition(position);
+    this.scheduleLayout(position);
+  }
+
+  private scheduleCollapseIfOutside(position: ToastPosition, container: HTMLElement): void {
+    const existing = this.hoverCloseFrames.get(position);
+    if (existing) window.cancelAnimationFrame(existing);
+
+    // Let the browser settle hit-testing before deciding whether the stack was truly left.
+    const frame = window.requestAnimationFrame(() => {
+      this.hoverCloseFrames.delete(position);
+      const target = document.elementFromPoint(this.lastPointerPosition.x, this.lastPointerPosition.y);
+      if (target instanceof Element && container.contains(target)) {
+        return;
+      }
+      this.collapsePosition(position);
+    });
+
+    this.hoverCloseFrames.set(position, frame);
+  }
+
   private removeToast(id: ToastId): void {
     const toast = this.queue.get(id);
     if (!toast || toast.removed) return;
@@ -470,7 +540,8 @@ export class Toaster {
   private layout(position: ToastPosition): void {
     const container = this.containers.get(position);
     if (!container) return;
-    layoutToasts(this.queue.activeByPosition(position), this.options, this.expandedPositions.has(position));
+    const height = layoutToasts(this.queue.activeByPosition(position), this.options, this.expandedPositions.has(position));
+    container.style.height = height ? `${height}px` : '0px';
   }
 
   private cleanupContainer(position: ToastPosition): void {
@@ -479,6 +550,11 @@ export class Toaster {
 
     this.containerCleanups.get(position)?.();
     this.containerCleanups.delete(position);
+    const hoverFrame = this.hoverCloseFrames.get(position);
+    if (hoverFrame) {
+      window.cancelAnimationFrame(hoverFrame);
+      this.hoverCloseFrames.delete(position);
+    }
 
     if (container.dataset.vtCreated === 'true') {
       removeElement(container);

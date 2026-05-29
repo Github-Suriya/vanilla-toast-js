@@ -11,10 +11,12 @@ export function markRemoving(toast: InternalToast): void {
   toast.element.dataset.removed = 'true';
 }
 
-export function layoutToasts(toasts: InternalToast[], options: ToasterOptions, expanded: boolean): void {
+export function layoutToasts(toasts: InternalToast[], options: ToasterOptions, expanded: boolean): number {
   const position = toasts[0]?.position ?? options.position;
   const top = isTopPosition(position);
+  const visibleCount = expanded ? toasts.length : Math.min(toasts.length, options.maxVisible);
   let offset = 0;
+  let stackHeight = 0;
 
   toasts.forEach((toast, index) => {
     const element = toast.element;
@@ -34,5 +36,10 @@ export function layoutToasts(toasts: InternalToast[], options: ToasterOptions, e
     element.dataset.front = index === 0 ? 'true' : 'false';
 
     offset += toast.height + options.gap;
+    if (index < visibleCount) {
+      stackHeight = expanded ? offset - options.gap : toast.height + index * options.gap;
+    }
   });
+
+  return Math.max(0, stackHeight);
 }
