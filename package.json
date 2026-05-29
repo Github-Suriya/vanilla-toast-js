@@ -1,6 +1,6 @@
 {
   "name": "vanilla-toast-js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A lightweight, framework-independent toast notification library for Vanilla JavaScript.",
   "type": "module",
   "license": "MIT",
