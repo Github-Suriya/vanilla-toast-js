@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Outer glow/shadow -->
+  <path d="M25 35C25 21.1929 36.1929 20 50 20C63.8071 20 75 21.1929 75 35V65C75 73.2843 68.2843 80 60 80H40C31.7157 80 25 73.2843 25 65V35Z" fill="#FBBF24" opacity="0.15"/>
+  <!-- Toast crust -->
+  <path d="M25 35C25 21.1929 36.1929 20 50 20C63.8071 20 75 21.1929 75 35V65C75 73.2843 68.2843 80 60 80H40C31.7157 80 25 73.2843 25 65V35Z" fill="#D97706" stroke="#B45309" stroke-width="4"/>
+  <!-- Toast crumb / inner bread -->
+  <path d="M30 38C30 28.5 36 26 50 26C64 26 70 28.5 70 38V63C70 68.5228 65.5228 73 60 73H40C34.4772 73 30 68.5228 30 63V38Z" fill="#FEF08A"/>
+  <!-- Melted butter block -->
+  <rect x="42" y="44" width="18" height="14" rx="2" fill="#F59E0B" transform="rotate(-6 51 51)"/>
+  <!-- Sparkle details -->
+  <path d="M72 18L74 22L78 24L74 26L72 30L70 26L66 24L70 22L72 18Z" fill="#FBBF24"/>
+  <path d="M20 70L21 72L23 73L21 74L20 76L19 74L17 73L19 72L20 70Z" fill="#FBBF24"/>
+</svg>
